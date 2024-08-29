@@ -20,7 +20,7 @@
 
 namespace mq {
 
-const char* g_customCaption = "MacroQuest: Even when you're loading.";
+const char* g_customCaption = "Welcome to VegasEQ - vegaseq.com.";
 
 class CDisplayHook
 {

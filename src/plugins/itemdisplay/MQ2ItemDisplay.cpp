@@ -995,6 +995,12 @@ static void CreateItemText(fmt::memory_buffer& buffer_, const ItemPtr& item, con
 		fmt::format_to(buffer, "Item ID: {}<br>", item->GetID());
 	}
 
+	std::string gearscores = GetPrivateProfileString("GearScores", fmt::format("{:07d}", item->GetID()), {}, INIFileName);
+	if (!gearscores.empty())
+	{
+		fmt::format_to(buffer, "GearScore: {}<br>", gearscores);
+	}
+
 	if (item->GetIconID() > 0)
 	{
 		fmt::format_to(buffer, "Icon ID: {}<br>", item->GetIconID());
@@ -1226,7 +1232,7 @@ void HandleLucyButton(const ItemPtr& pItem)
 {
 	if (pItem)
 	{
-		std::string url = fmt::format("https://lucy.allakhazam.com/item.html?id={}", pItem->GetID());
+		std::string url = fmt::format("http://vegaseq.com/Allaclone/?a=item&id={}", pItem->GetID());
 		ShellExecute(nullptr, "open", url.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
 	}
 }
@@ -1332,7 +1338,7 @@ public:
 
 				CButtonWnd* pBtn = (CButtonWnd*)pSidlMgr->CreateXWndFromTemplate(pAnchor, btnTemplate);
 				pBtn->SetCRNormal(MQColor(255, 255, 0));
-				pBtn->SetWindowText("Lucy");
+				pBtn->SetWindowText("Alla");
 				pBtn->SetDecalTint(MQColor(0, 255, 255));
 				extraInfo.pLucyButton.reset(pBtn);
 
