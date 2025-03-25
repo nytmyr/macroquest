@@ -1,35 +1,95 @@
 // MQ2VegasLoot.cpp : Defines the entry point for the DLL application.
 //
 
-// PLUGIN_API is only to be used for callbacks.  All existing callbacks at this time
-// are shown below. Remove the ones your plugin does not use.  Always use Initialize
-// and Shutdown for setup and cleanup.
-
 #include <mq/Plugin.h>
 
 PreSetup("MQ2VegasLoot");
 PLUGIN_VERSION(0.1);
 
-/**
- * Avoid Globals if at all possible, since they persist throughout your program.
- * But if you must have them, here is the place to put them.
- */
-// bool ShowMQ2VegasLootWindow = true;
+bool bInitDone = false;
 
-/**
- * @fn InitializePlugin
- *
- * This is called once on plugin initialization and can be considered the startup
- * routine for the plugin.
- */
+namespace DefaultSettings {
+	constexpr bool AutoLootOnKills						= true;
+	constexpr bool CharacterSpecificSettings			= false;
+	constexpr bool AutoSaveNewItems						= true;
+	constexpr bool LootSaveOnlyItems					= false;	
+	constexpr int CorpseCheckRadius						= 100;
+	constexpr int CorpseCheckRadiusIncrements			= 100;
+	constexpr int MaxCorpseCheckRadius					= 400;
+	constexpr int FailedLootCount						= 6;
+	constexpr bool AttemptToFixCorpses					= true;
+	constexpr bool LootSpellsSongs						= true;
+	constexpr int NavTimeoutSeconds						= 20;
+	constexpr bool LootNoDrop							= true;
+	constexpr bool PlayBeepsOnFullInv					= true;
+	constexpr bool PauseOnAggro							= true;
+	constexpr int NumberOfBeepsOnFullInv				= 3;
+	constexpr bool AnnounceAttemptToLoot				= true;
+	constexpr bool AnnounceCorpseFound					= true;
+	constexpr bool AnnounceOnFullInv					= true;
+	constexpr bool AnnounceAllOnInvFull					= true;
+	constexpr bool AnnounceOnNoLootSongSpellConflict	= true;
+	constexpr bool AnnounceOnDropConflict				= true;
+	constexpr bool AnnounceOnLoreConflict				= true;
+	constexpr bool AnnounceSkippedItems					= true;
+	constexpr bool AnnounceSkippedCorpse				= true;
+	constexpr bool AnnounceNoPathFound					= true;
+	constexpr bool AnnounceNoCorpseFound				= true;
+	constexpr bool AnnounceNavigation					= true;
+	constexpr bool AnnounceStick						= true;
+	constexpr bool AnnounceNavTimeout					= true;
+	constexpr bool AnnounceEmptyCorpse					= true;
+	constexpr bool AnnounceFixCorpseAttempt				= true;
+	constexpr bool AnnounceFailedLoot					= true;
+	constexpr bool AnnounceTargetLoss					= true;
+	constexpr bool AnnouncePause						= true;
+
+	constexpr int START = DefaultSettings::CharacterSpecificSettings;
+	constexpr int END = DefaultSettings::AnnouncePause;		// Increment as needed
+};
+
+namespace Settings {
+	bool bAutoLootOnKills = DefaultSettings::AutoLootOnKills;
+	bool bCharacterSpecificSettings = DefaultSettings::CharacterSpecificSettings;
+	bool bAutoSaveNewItems = DefaultSettings::AutoSaveNewItems;
+	bool bLootSaveOnlyItems = DefaultSettings::LootSaveOnlyItems;
+	int iCorpseCheckRadius = DefaultSettings::CorpseCheckRadius;
+	int iCorpseCheckRadiusIncrements = DefaultSettings::CorpseCheckRadiusIncrements;
+	int iMaxCorpseCheckRadius = DefaultSettings::MaxCorpseCheckRadius;
+	int iFailedLootCount = DefaultSettings::FailedLootCount;
+	bool bAttemptToFixCorpses = DefaultSettings::AttemptToFixCorpses;
+	bool bLootSpellsSongs = DefaultSettings::LootSpellsSongs;
+	int iNavTimeoutSeconds = DefaultSettings::NavTimeoutSeconds;
+	bool bLootNoDrop = DefaultSettings::LootNoDrop;
+	bool bPlayBeepsOnFullInv = DefaultSettings::PlayBeepsOnFullInv;
+	bool bPauseOnAggro = DefaultSettings::PauseOnAggro;
+	int iNumberOfBeepsOnFullInv = DefaultSettings::NumberOfBeepsOnFullInv;
+	bool bAnnounceAttemptToLoot = DefaultSettings::AnnounceAttemptToLoot;
+	bool bAnnounceCorpseFound = DefaultSettings::AnnounceCorpseFound;
+	bool bAnnounceOnFullInv = DefaultSettings::AnnounceOnFullInv;
+	bool bAnnounceAllOnInvFull = DefaultSettings::AnnounceAllOnInvFull;
+	bool bAnnounceOnNoLootSongSpellConflict = DefaultSettings::AnnounceOnNoLootSongSpellConflict;
+	bool bAnnounceOnDropConflict = DefaultSettings::AnnounceOnDropConflict;
+	bool bAnnounceOnLoreConflict = DefaultSettings::AnnounceOnLoreConflict;
+	bool bAnnounceSkippedItems = DefaultSettings::AnnounceSkippedItems;
+	bool bAnnounceSkippedCorpse = DefaultSettings::AnnounceNoPathFound;
+	bool bAnnounceNoPathFound = DefaultSettings::AnnounceNoPathFound;
+	bool bAnnounceNoCorpseFound = DefaultSettings::AnnounceNoCorpseFound;
+	bool bAnnounceNavigation = DefaultSettings::AnnounceNavigation;
+	bool bAnnounceStick = DefaultSettings::AnnounceStick;
+	bool bAnnounceNavTimeout = DefaultSettings::AnnounceNavTimeout;
+	bool bAnnounceEmptyCorpse = DefaultSettings::AnnounceEmptyCorpse;
+	bool bAnnounceFixCorpseAttempt = DefaultSettings::AnnounceFixCorpseAttempt;
+	bool bAnnounceFailedLoot = DefaultSettings::AnnounceFailedLoot;
+	bool bAnnounceTargetLoss = DefaultSettings::AnnounceTargetLoss;
+	bool bAnnouncePause = DefaultSettings::AnnouncePause;
+};
+
 PLUGIN_API void InitializePlugin()
 {
 	DebugSpewAlways("MQ2VegasLoot::Initializing version %f", MQ2Version);
 
-	// Examples:
-	// AddCommand("/mycommand", MyCommand);
-	// AddXMLFile("MQUI_MyXMLFile.xml");
-	// AddMQ2Data("mytlo", MyTLOData);
+	AddCommand("/autoloot", AutoLootCommand);
 }
 
 /**
@@ -42,89 +102,20 @@ PLUGIN_API void ShutdownPlugin()
 {
 	DebugSpewAlways("MQ2VegasLoot::Shutting down");
 
-	// Examples:
-	// RemoveCommand("/mycommand");
-	// RemoveXMLFile("MQUI_MyXMLFile.xml");
-	// RemoveMQ2Data("mytlo");
+	RemoveCommand("/autoloot", AutoLootCommand);
 }
 
-/**
- * @fn OnCleanUI
- *
- * This is called once just before the shutdown of the UI system and each time the
- * game requests that the UI be cleaned.  Most commonly this happens when a
- * /loadskin command is issued, but it also occurs when reaching the character
- * select screen and when first entering the game.
- *
- * One purpose of this function is to allow you to destroy any custom windows that
- * you have created and cleanup any UI items that need to be removed.
- */
-PLUGIN_API void OnCleanUI()
-{
-	// DebugSpewAlways("MQ2VegasLoot::OnCleanUI()");
-}
 
-/**
- * @fn OnReloadUI
- *
- * This is called once just after the UI system is loaded. Most commonly this
- * happens when a /loadskin command is issued, but it also occurs when first
- * entering the game.
- *
- * One purpose of this function is to allow you to recreate any custom windows
- * that you have setup.
- */
-PLUGIN_API void OnReloadUI()
-{
-	// DebugSpewAlways("MQ2VegasLoot::OnReloadUI()");
-}
 
-/**
- * @fn OnDrawHUD
- *
- * This is called each time the Heads Up Display (HUD) is drawn.  The HUD is
- * responsible for the net status and packet loss bar.
- *
- * Note that this is not called at all if the HUD is not shown (default F11 to
- * toggle).
- *
- * Because the net status is updated frequently, it is recommended to have a
- * timer or counter at the start of this call to limit the amount of times the
- * code in this section is executed.
- */
-PLUGIN_API void OnDrawHUD()
-{
-/*
-	static std::chrono::steady_clock::time_point DrawHUDTimer = std::chrono::steady_clock::now();
-	// Run only after timer is up
-	if (std::chrono::steady_clock::now() > DrawHUDTimer)
-	{
-		// Wait half a second before running again
-		DrawHUDTimer = std::chrono::steady_clock::now() + std::chrono::milliseconds(500);
-		DebugSpewAlways("MQ2VegasLoot::OnDrawHUD()");
+PLUGIN_API void SetGameState(int GameState) {
+	if (GameState == GAMESTATE_INGAME) {
+		if (!bInitDone)
+			LoadIni();
 	}
-*/
-}
-
-/**
- * @fn SetGameState
- *
- * This is called when the GameState changes.  It is also called once after the
- * plugin is initialized.
- *
- * For a list of known GameState values, see the constants that begin with
- * GAMESTATE_.  The most commonly used of these is GAMESTATE_INGAME.
- *
- * When zoning, this is called once after @ref OnBeginZone @ref OnRemoveSpawn
- * and @ref OnRemoveGroundItem are all done and then called once again after
- * @ref OnEndZone and @ref OnAddSpawn are done but prior to @ref OnAddGroundItem
- * and @ref OnZoned
- *
- * @param GameState int - The value of GameState at the time of the call
- */
-PLUGIN_API void SetGameState(int GameState)
-{
-	// DebugSpewAlways("MQ2VegasLoot::SetGameState(%d)", GameState);
+	else if (GameState != GAMESTATE_LOGGINGIN) {
+		if (bInitDone)
+			bInitDone = false;
+	}
 }
 
 
@@ -198,137 +189,6 @@ PLUGIN_API bool OnIncomingChat(const char* Line, DWORD Color)
 }
 
 /**
- * @fn OnAddSpawn
- *
- * This is called each time a spawn is added to a zone (ie, something spawns). It is
- * also called for each existing spawn when a plugin first initializes.
- *
- * When zoning, this is called for all spawns in the zone after @ref OnEndZone is
- * called and before @ref OnZoned is called.
- *
- * @param pNewSpawn PSPAWNINFO - The spawn that was added
- */
-PLUGIN_API void OnAddSpawn(PSPAWNINFO pNewSpawn)
-{
-	// DebugSpewAlways("MQ2VegasLoot::OnAddSpawn(%s)", pNewSpawn->Name);
-}
-
-/**
- * @fn OnRemoveSpawn
- *
- * This is called each time a spawn is removed from a zone (ie, something despawns
- * or is killed).  It is NOT called when a plugin shuts down.
- *
- * When zoning, this is called for all spawns in the zone after @ref OnBeginZone is
- * called.
- *
- * @param pSpawn PSPAWNINFO - The spawn that was removed
- */
-PLUGIN_API void OnRemoveSpawn(PSPAWNINFO pSpawn)
-{
-	// DebugSpewAlways("MQ2VegasLoot::OnRemoveSpawn(%s)", pSpawn->Name);
-}
-
-/**
- * @fn OnAddGroundItem
- *
- * This is called each time a ground item is added to a zone (ie, something spawns).
- * It is also called for each existing ground item when a plugin first initializes.
- *
- * When zoning, this is called for all ground items in the zone after @ref OnEndZone
- * is called and before @ref OnZoned is called.
- *
- * @param pNewGroundItem PGROUNDITEM - The ground item that was added
- */
-PLUGIN_API void OnAddGroundItem(PGROUNDITEM pNewGroundItem)
-{
-	// DebugSpewAlways("MQ2VegasLoot::OnAddGroundItem(%d)", pNewGroundItem->DropID);
-}
-
-/**
- * @fn OnRemoveGroundItem
- *
- * This is called each time a ground item is removed from a zone (ie, something
- * despawns or is picked up).  It is NOT called when a plugin shuts down.
- *
- * When zoning, this is called for all ground items in the zone after
- * @ref OnBeginZone is called.
- *
- * @param pGroundItem PGROUNDITEM - The ground item that was removed
- */
-PLUGIN_API void OnRemoveGroundItem(PGROUNDITEM pGroundItem)
-{
-	// DebugSpewAlways("MQ2VegasLoot::OnRemoveGroundItem(%d)", pGroundItem->DropID);
-}
-
-/**
- * @fn OnBeginZone
- *
- * This is called just after entering a zone line and as the loading screen appears.
- */
-PLUGIN_API void OnBeginZone()
-{
-	// DebugSpewAlways("MQ2VegasLoot::OnBeginZone()");
-}
-
-/**
- * @fn OnEndZone
- *
- * This is called just after the loading screen, but prior to the zone being fully
- * loaded.
- *
- * This should occur before @ref OnAddSpawn and @ref OnAddGroundItem are called. It
- * always occurs before @ref OnZoned is called.
- */
-PLUGIN_API void OnEndZone()
-{
-	// DebugSpewAlways("MQ2VegasLoot::OnEndZone()");
-}
-
-/**
- * @fn OnZoned
- *
- * This is called after entering a new zone and the zone is considered "loaded."
- *
- * It occurs after @ref OnEndZone @ref OnAddSpawn and @ref OnAddGroundItem have
- * been called.
- */
-PLUGIN_API void OnZoned()
-{
-	// DebugSpewAlways("MQ2VegasLoot::OnZoned()");
-}
-
-/**
- * @fn OnUpdateImGui
- *
- * This is called each time that the ImGui Overlay is rendered. Use this to render
- * and update plugin specific widgets.
- *
- * Because this happens extremely frequently, it is recommended to move any actual
- * work to a separate call and use this only for updating the display.
- */
-PLUGIN_API void OnUpdateImGui()
-{
-/*
-	if (GetGameState() == GAMESTATE_INGAME)
-	{
-		if (ShowMQ2VegasLootWindow)
-		{
-			if (ImGui::Begin("MQ2VegasLoot", &ShowMQ2VegasLootWindow, ImGuiWindowFlags_MenuBar))
-			{
-				if (ImGui::BeginMenuBar())
-				{
-					ImGui::Text("MQ2VegasLoot is loaded!");
-					ImGui::EndMenuBar();
-				}
-			}
-			ImGui::End();
-		}
-	}
-*/
-}
-
-/**
  * @fn OnMacroStart
  *
  * This is called each time a macro starts (ex: /mac somemacro.mac), prior to
@@ -353,36 +213,48 @@ PLUGIN_API void OnMacroStop(const char* Name)
 	// DebugSpewAlways("MQ2VegasLoot::OnMacroStop(%s)", Name);
 }
 
-/**
- * @fn OnLoadPlugin
- *
- * This is called each time a plugin is loaded (ex: /plugin someplugin), after the
- * plugin has been loaded and any associated -AutoExec.cfg file has been launched.
- * This means it will be executed after the plugin's @ref InitializePlugin callback.
- *
- * This is also called when THIS plugin is loaded, but initialization tasks should
- * still be done in @ref InitializePlugin.
- *
- * @param Name const char* - The name of the plugin that was loaded
- */
-PLUGIN_API void OnLoadPlugin(const char* Name)
-{
-	// DebugSpewAlways("MQ2VegasLoot::OnLoadPlugin(%s)", Name);
+void LoadIni() {
+	PCHARINFO pChar = GetCharInfo();
+
+	if (!pChar) {
+		return;
+	}
+
+	Settings::bCharacterSpecificSettings				= GetPrivateProfileBool("Settings", DefaultSettings::CharacterSpecificSettings, DefaultSettings::CharacterSpecificSettings, INIFileName);
+	Settings::bAutoSaveNewItems 						= GetPrivateProfileBool("Settings", DefaultSettings::AutoSaveNewItems, DefaultSettings::AutoSaveNewItems, INIFileName);
+	Settings::bLootSaveOnlyItems						= GetPrivateProfileBool("Settings", DefaultSettings::LootSaveOnlyItems, DefaultSettings::LootSaveOnlyItems, INIFileName);
+	Settings::iCorpseCheckRadius						= GetPrivateProfileBool("Settings", DefaultSettings::CorpseCheckRadius, DefaultSettings::CharacterSpecificSettings, INIFileName);
+	Settings::iCorpseCheckRadiusIncrements				= GetPrivateProfileBool("Settings", DefaultSettings::CorpseCheckRadiusIncrements, DefaultSettings::CharacterSpecificSettings, INIFileName);
+	Settings::iMaxCorpseCheckRadius						= GetPrivateProfileBool("Settings", DefaultSettings::MaxCorpseCheckRadius, DefaultSettings::CharacterSpecificSettings, INIFileName);
+	Settings::iFailedLootCount							= GetPrivateProfileBool("Settings", DefaultSettings::FailedLootCount, DefaultSettings::CharacterSpecificSettings, INIFileName);
+	Settings::bAttemptToFixCorpses						= GetPrivateProfileBool("Settings", DefaultSettings::AttemptToFixCorpses, DefaultSettings::CharacterSpecificSettings, INIFileName);
+	Settings::bLootSpellsSongs							= GetPrivateProfileBool("Settings", DefaultSettings::CharacterSpecificSettings, DefaultSettings::CharacterSpecificSettings, INIFileName);
+	Settings::iNavTimeoutSeconds						= GetPrivateProfileBool("Settings", DefaultSettings::CharacterSpecificSettings, DefaultSettings::CharacterSpecificSettings, INIFileName);
+	Settings::bLootNoDrop								= GetPrivateProfileBool("Settings", DefaultSettings::CharacterSpecificSettings, DefaultSettings::CharacterSpecificSettings, INIFileName);
+	Settings::bPlayBeepsOnFullInv						= GetPrivateProfileBool("Settings", DefaultSettings::CharacterSpecificSettings, DefaultSettings::CharacterSpecificSettings, INIFileName);
+	Settings::iNumberOfBeepsOnFullInv					= GetPrivateProfileBool("Settings", DefaultSettings::CharacterSpecificSettings, DefaultSettings::CharacterSpecificSettings, INIFileName);
+	Settings::bAnnounceAttemptToLoot					= GetPrivateProfileBool("Settings", DefaultSettings::CharacterSpecificSettings, DefaultSettings::CharacterSpecificSettings, INIFileName);
+	Settings::bAnnounceCorpseFound 						= GetPrivateProfileBool("Settings", DefaultSettings::CharacterSpecificSettings, DefaultSettings::CharacterSpecificSettings, INIFileName);
+	Settings::bAnnounceOnFullInv 						= GetPrivateProfileBool("Settings", DefaultSettings::CharacterSpecificSettings, DefaultSettings::CharacterSpecificSettings, INIFileName);
+	Settings::bAnnounceAllOnInvFull 					= GetPrivateProfileBool("Settings", DefaultSettings::CharacterSpecificSettings, DefaultSettings::CharacterSpecificSettings, INIFileName);
+	Settings::bAnnounceOnNoLootSongSpellConflict 		= GetPrivateProfileBool("Settings", DefaultSettings::CharacterSpecificSettings, DefaultSettings::CharacterSpecificSettings, INIFileName);
+	Settings::bAnnounceOnDropConflict 					= GetPrivateProfileBool("Settings", DefaultSettings::CharacterSpecificSettings, DefaultSettings::CharacterSpecificSettings, INIFileName);
+	Settings::bAnnounceOnLoreConflict 					= GetPrivateProfileBool("Settings", DefaultSettings::CharacterSpecificSettings, DefaultSettings::CharacterSpecificSettings, INIFileName);
+	Settings::bAnnounceSkippedItems 					= GetPrivateProfileBool("Settings", DefaultSettings::CharacterSpecificSettings, DefaultSettings::CharacterSpecificSettings, INIFileName);
+	Settings::bAnnounceSkippedCorpse 					= GetPrivateProfileBool("Settings", DefaultSettings::CharacterSpecificSettings, DefaultSettings::CharacterSpecificSettings, INIFileName);
+	Settings::bAnnounceNoPathFound 						= GetPrivateProfileBool("Settings", DefaultSettings::CharacterSpecificSettings, DefaultSettings::CharacterSpecificSettings, INIFileName);
+	Settings::bAnnounceNoCorpseFound 					= GetPrivateProfileBool("Settings", DefaultSettings::CharacterSpecificSettings, DefaultSettings::CharacterSpecificSettings, INIFileName);
+	Settings::bAnnounceNavigation 						= GetPrivateProfileBool("Settings", DefaultSettings::CharacterSpecificSettings, DefaultSettings::CharacterSpecificSettings, INIFileName);
+	Settings::bAnnounceStick 							= GetPrivateProfileBool("Settings", DefaultSettings::CharacterSpecificSettings, DefaultSettings::CharacterSpecificSettings, INIFileName);
+	Settings::bAnnounceNavTimeout 						= GetPrivateProfileBool("Settings", DefaultSettings::CharacterSpecificSettings, DefaultSettings::CharacterSpecificSettings, INIFileName);
+	Settings::bAnnounceEmptyCorpse 						= GetPrivateProfileBool("Settings", DefaultSettings::CharacterSpecificSettings, DefaultSettings::CharacterSpecificSettings, INIFileName);
+	Settings::bAnnounceFixCorpseAttempt 				= GetPrivateProfileBool("Settings", DefaultSettings::CharacterSpecificSettings, DefaultSettings::CharacterSpecificSettings, INIFileName);
+	Settings::bAnnounceFailedLoot 						= GetPrivateProfileBool("Settings", DefaultSettings::CharacterSpecificSettings, DefaultSettings::CharacterSpecificSettings, INIFileName);
+	Settings::bAnnounceTargetLoss 						= GetPrivateProfileBool("Settings", DefaultSettings::CharacterSpecificSettings, DefaultSettings::CharacterSpecificSettings, INIFileName);
+	Settings::bAnnouncePause 							= GetPrivateProfileBool("Settings", DefaultSettings::AnnouncePause, DefaultSettings::AnnouncePause, INIFileName);
+
 }
 
-/**
- * @fn OnUnloadPlugin
- *
- * This is called each time a plugin is unloaded (ex: /plugin someplugin unload),
- * just prior to the plugin unloading.  This means it will be executed prior to that
- * plugin's @ref ShutdownPlugin callback.
- *
- * This is also called when THIS plugin is unloaded, but shutdown tasks should still
- * be done in @ref ShutdownPlugin.
- *
- * @param Name const char* - The name of the plugin that is to be unloaded
- */
-PLUGIN_API void OnUnloadPlugin(const char* Name)
-{
-	// DebugSpewAlways("MQ2VegasLoot::OnUnloadPlugin(%s)", Name);
+void AutoLootCommand(PSPAWNINFO pCHAR, PCHAR zLine) {
+
 }
