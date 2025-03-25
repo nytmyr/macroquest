@@ -88,6 +88,10 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MQMountClassicModels", "..\
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MQ2NetBots", "..\plugins\MQ2NetBots\MQ2NetBots.vcxproj", "{8E104C79-88D5-4BCB-B642-2F0FE3D67A3E}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MQ2VegasLoot", "..\plugins\MQ2VegasLoot\MQ2VegasLoot.vcxproj", "{2B180680-91BB-40C6-AEC1-11E10E62E816}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MQ2Spawns", "..\plugins\MQ2Spawns\MQ2Spawns.vcxproj", "{CA99F70E-64DF-6723-16C6-CBF682324A59}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -372,6 +376,22 @@ Global
 		{8E104C79-88D5-4BCB-B642-2F0FE3D67A3E}.Release|Win32.Build.0 = Release|Win32
 		{8E104C79-88D5-4BCB-B642-2F0FE3D67A3E}.Release|x64.ActiveCfg = Release|x64
 		{8E104C79-88D5-4BCB-B642-2F0FE3D67A3E}.Release|x64.Build.0 = Release|x64
+		{2B180680-91BB-40C6-AEC1-11E10E62E816}.Debug|Win32.ActiveCfg = Debug|Win32
+		{2B180680-91BB-40C6-AEC1-11E10E62E816}.Debug|Win32.Build.0 = Debug|Win32
+		{2B180680-91BB-40C6-AEC1-11E10E62E816}.Debug|x64.ActiveCfg = Debug|x64
+		{2B180680-91BB-40C6-AEC1-11E10E62E816}.Debug|x64.Build.0 = Debug|x64
+		{2B180680-91BB-40C6-AEC1-11E10E62E816}.Release|Win32.ActiveCfg = Release|Win32
+		{2B180680-91BB-40C6-AEC1-11E10E62E816}.Release|Win32.Build.0 = Release|Win32
+		{2B180680-91BB-40C6-AEC1-11E10E62E816}.Release|x64.ActiveCfg = Release|x64
+		{2B180680-91BB-40C6-AEC1-11E10E62E816}.Release|x64.Build.0 = Release|x64
+		{CA99F70E-64DF-6723-16C6-CBF682324A59}.Debug|Win32.ActiveCfg = Debug|Win32
+		{CA99F70E-64DF-6723-16C6-CBF682324A59}.Debug|Win32.Build.0 = Debug|Win32
+		{CA99F70E-64DF-6723-16C6-CBF682324A59}.Debug|x64.ActiveCfg = Debug|x64
+		{CA99F70E-64DF-6723-16C6-CBF682324A59}.Debug|x64.Build.0 = Debug|x64
+		{CA99F70E-64DF-6723-16C6-CBF682324A59}.Release|Win32.ActiveCfg = Release|Win32
+		{CA99F70E-64DF-6723-16C6-CBF682324A59}.Release|Win32.Build.0 = Release|Win32
+		{CA99F70E-64DF-6723-16C6-CBF682324A59}.Release|x64.ActiveCfg = Release|x64
+		{CA99F70E-64DF-6723-16C6-CBF682324A59}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
