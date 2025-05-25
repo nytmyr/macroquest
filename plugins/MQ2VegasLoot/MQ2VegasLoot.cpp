@@ -6,7 +6,14 @@
 PreSetup("MQ2VegasLoot");
 PLUGIN_VERSION(0.1);
 
+
+std::vector <std::string> item_names;
+std::vector <std::string> vGlobalNames;
+std::vector <std::string> vNames;
+
 bool bInitDone								= false;
+
+char items_list[MAX_STRING];
 
 bool bAnnounceAllOnInvFull					= true;
 bool bAnnounceAttemptToLoot					= false;
@@ -104,6 +111,43 @@ void LoadIni() {
 	//int bNavTimeoutSeconds				= GetPrivateProfileInt(strSettings, "NavTimeoutSeconds", true, INIFileName);
 	int bNumberOfBeepsOnFullInv				= GetPrivateProfileInt(strSettings, "NumberOfBeepsOnFullInv", true, INIFileName);
 
+	// store all keep, destroy, annonce items
+	std::string strNames = Prefix + "Items";
+	GetPrivateProfileSection(strNames.c_str(), items_list, MAX_STRING, INIFileName);
+
+	// clear list
+	item_names.clear();
+
+	// TODO: Rather than duplicate the below code multiple times, abstract to function
+	char* p = (char*) items_list;
+	char* pch = 0;
+	char* Next_Token1 = 0;
+	size_t length = 0;
+	int i = 0;
+	// loop through all entries under _Names
+	// values are terminated by \0, final value is teminated with \0\0
+	// values look like
+	// Charactername=1
+	while (*p) {
+		length = strlen(p);
+		// split entries on =
+		pch = strtok_s(p, "=", &Next_Token1);
+		while (pch != nullptr) {
+			// Odd entries are the names. Add it to the list
+			item_names.push_back(pch);
+
+			// next is value. Don't use it so skip it
+			pch = strtok_s(nullptr, "=", &Next_Token1);
+
+			// next name
+			pch = strtok_s(nullptr, "=", &Next_Token1);
+			i++;
+		}
+		p += length;
+		p++;
+	}
+
+	bInitDone = true;
 }
 
 void AutoLootCommand(PSPAWNINFO pCHAR, PCHAR zLine) {
@@ -117,75 +161,38 @@ void AutoLootCommand(PSPAWNINFO pCHAR, PCHAR zLine) {
 	}
 }
 
-/**
- * @fn OnWriteChatColor
- *
- * This is called each time WriteChatColor is called (whether by MQ2Main or by any
- * plugin).  This can be considered the "when outputting text from MQ" callback.
- *
- * This ignores filters on display, so if they are needed either implement them in
- * this section or see @ref OnIncomingChat where filters are already handled.
- *
- * If CEverQuest::dsp_chat is not called, and events are required, they'll need to
- * be implemented here as well.  Otherwise, see @ref OnIncomingChat where that is
- * already handled.
- *
- * For a list of Color values, see the constants for USERCOLOR_.  The default is
- * USERCOLOR_DEFAULT.
- *
- * @param Line const char* - The line that was passed to WriteChatColor
- * @param Color int - The type of chat text this is to be sent as
- * @param Filter int - (default 0)
- */
-PLUGIN_API void OnWriteChatColor(const char* Line, int Color, int Filter)
-{
-	// DebugSpewAlways("MQ2VegasLoot::OnWriteChatColor(%s, %d, %d)", Line, Color, Filter);
-}
+PLUGIN_API void OnPulse() {
+	static int Pulse = 0;
 
-/**
- * @fn OnIncomingChat
- *
- * This is called each time a line of chat is shown.  It occurs after MQ filters
- * and chat events have been handled.  If you need to know when MQ2 has sent chat,
- * consider using @ref OnWriteChatColor instead.
- *
- * For a list of Color values, see the constants for USERCOLOR_. The default is
- * USERCOLOR_DEFAULT.
- *
- * @param Line const char* - The line of text that was shown
- * @param Color int - The type of chat text this was sent as
- *
- * @return bool - Whether to filter this chat from display
- */
-PLUGIN_API bool OnIncomingChat(const char* Line, DWORD Color)
-{
-	// DebugSpewAlways("MQ2VegasLoot::OnIncomingChat(%s, %d)", Line, Color);
-	return false;
-}
+	if (GetGameState() != GAMESTATE_INGAME) {
+		return;
+	}
 
-/**
- * @fn OnMacroStart
- *
- * This is called each time a macro starts (ex: /mac somemacro.mac), prior to
- * launching the macro.
- *
- * @param Name const char* - The name of the macro that was launched
- */
-PLUGIN_API void OnMacroStart(const char* Name)
-{
-	// DebugSpewAlways("MQ2VegasLoot::OnMacroStart(%s)", Name);
-}
+	if (!bInitDone) {
+		return;
+	}
 
-/**
- * @fn OnMacroStop
- *
- * This is called each time a macro stops (ex: /endmac), after the macro has ended.
- *
- * @param Name const char* - The name of the macro that was stopped.
- */
-PLUGIN_API void OnMacroStop(const char* Name)
-{
-	// DebugSpewAlways("MQ2VegasLoot::OnMacroStop(%s)", Name);
+	if (!bAutoLootOnKills) {
+		return;
+	}
+
+	// Process every 10 pulses
+	if (++Pulse < 10) {
+		return;
+	}
+
+	Pulse = 0;
+
+	if (pLootWnd && pLootWnd->IsVisible()) {
+		WriteChatf("\agLoot window is open."); //deleteme
+
+		auto loot_count = pLootWnd->GetLootItems().GetCount();
+
+		WriteChatf("\ag Corpse has (%d) items.", loot_count); //deleteme
+		//pLootWnd->GetLootItems().FindItem(0, FindItemByNamePred(pName1, bExact));
+		//if (CXWnd* pTRDW_Trade_Button = pTradeWnd->GetChildItem("TRDW_Trade_Button")) {
+		//SendWndClick2(pTRDW_Trade_Button,"leftmouseup");
+	}
 }
 
 PLUGIN_API void InitializePlugin() {
@@ -212,12 +219,69 @@ PLUGIN_API void SetGameState(int GameState) {
 	}
 }
 
-PLUGIN_API void OnPulse() {
-	static int Pulse = 0;
+/**
+ * @fn OnWriteChatColor
+ *
+ * This is called each time WriteChatColor is called (whether by MQ2Main or by any
+ * plugin).  This can be considered the "when outputting text from MQ" callback.
+ *
+ * This ignores filters on display, so if they are needed either implement them in
+ * this section or see @ref OnIncomingChat where filters are already handled.
+ *
+ * If CEverQuest::dsp_chat is not called, and events are required, they'll need to
+ * be implemented here as well.  Otherwise, see @ref OnIncomingChat where that is
+ * already handled.
+ *
+ * For a list of Color values, see the constants for USERCOLOR_.  The default is
+ * USERCOLOR_DEFAULT.
+ *
+ * @param Line const char* - The line that was passed to WriteChatColor
+ * @param Color int - The type of chat text this is to be sent as
+ * @param Filter int - (default 0)
+ */
+PLUGIN_API void OnWriteChatColor(const char* Line, int Color, int Filter) {
+	// DebugSpewAlways("MQ2VegasLoot::OnWriteChatColor(%s, %d, %d)", Line, Color, Filter);
+}
 
-	if (GetGameState() != GAMESTATE_INGAME)
-		return;
+/**
+ * @fn OnIncomingChat
+ *
+ * This is called each time a line of chat is shown.  It occurs after MQ filters
+ * and chat events have been handled.  If you need to know when MQ2 has sent chat,
+ * consider using @ref OnWriteChatColor instead.
+ *
+ * For a list of Color values, see the constants for USERCOLOR_. The default is
+ * USERCOLOR_DEFAULT.
+ *
+ * @param Line const char* - The line of text that was shown
+ * @param Color int - The type of chat text this was sent as
+ *
+ * @return bool - Whether to filter this chat from display
+ */
+PLUGIN_API bool OnIncomingChat(const char* Line, DWORD Color) {
+	// DebugSpewAlways("MQ2VegasLoot::OnIncomingChat(%s, %d)", Line, Color);
+	return false;
+}
 
-	if (!bInitDone)
-		return;
+/**
+ * @fn OnMacroStart
+ *
+ * This is called each time a macro starts (ex: /mac somemacro.mac), prior to
+ * launching the macro.
+ *
+ * @param Name const char* - The name of the macro that was launched
+ */
+PLUGIN_API void OnMacroStart(const char* Name) {
+	// DebugSpewAlways("MQ2VegasLoot::OnMacroStart(%s)", Name);
+}
+
+/**
+ * @fn OnMacroStop
+ *
+ * This is called each time a macro stops (ex: /endmac), after the macro has ended.
+ *
+ * @param Name const char* - The name of the macro that was stopped.
+ */
+PLUGIN_API void OnMacroStop(const char* Name) {
+	// DebugSpewAlways("MQ2VegasLoot::OnMacroStop(%s)", Name);
 }
