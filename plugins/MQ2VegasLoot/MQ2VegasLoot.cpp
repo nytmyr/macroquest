@@ -6,140 +6,115 @@
 PreSetup("MQ2VegasLoot");
 PLUGIN_VERSION(0.1);
 
-bool bInitDone = false;
+bool bInitDone								= false;
 
-namespace DefaultSettings {
-	constexpr bool AutoLootOnKills						= true;
-	constexpr bool CharacterSpecificSettings			= false;
-	constexpr bool AutoSaveNewItems						= true;
-	constexpr bool LootSaveOnlyItems					= false;	
-	constexpr int CorpseCheckRadius						= 100;
-	constexpr int CorpseCheckRadiusIncrements			= 100;
-	constexpr int MaxCorpseCheckRadius					= 400;
-	constexpr int FailedLootCount						= 6;
-	constexpr bool AttemptToFixCorpses					= true;
-	constexpr bool LootSpellsSongs						= true;
-	constexpr int NavTimeoutSeconds						= 20;
-	constexpr bool LootNoDrop							= true;
-	constexpr bool PlayBeepsOnFullInv					= true;
-	constexpr bool PauseOnAggro							= true;
-	constexpr int NumberOfBeepsOnFullInv				= 3;
-	constexpr bool AnnounceAttemptToLoot				= true;
-	constexpr bool AnnounceCorpseFound					= true;
-	constexpr bool AnnounceOnFullInv					= true;
-	constexpr bool AnnounceAllOnInvFull					= true;
-	constexpr bool AnnounceOnNoLootSongSpellConflict	= true;
-	constexpr bool AnnounceOnDropConflict				= true;
-	constexpr bool AnnounceOnLoreConflict				= true;
-	constexpr bool AnnounceSkippedItems					= true;
-	constexpr bool AnnounceSkippedCorpse				= true;
-	constexpr bool AnnounceNoPathFound					= true;
-	constexpr bool AnnounceNoCorpseFound				= true;
-	constexpr bool AnnounceNavigation					= true;
-	constexpr bool AnnounceStick						= true;
-	constexpr bool AnnounceNavTimeout					= true;
-	constexpr bool AnnounceEmptyCorpse					= true;
-	constexpr bool AnnounceFixCorpseAttempt				= true;
-	constexpr bool AnnounceFailedLoot					= true;
-	constexpr bool AnnounceTargetLoss					= true;
-	constexpr bool AnnouncePause						= true;
+bool bAnnounceAllOnInvFull					= true;
+bool bAnnounceAttemptToLoot					= false;
+//bool bAnnounceCorpseFound					= false;
+bool bAnnounceEmptyCorpse					= false;
+bool bAnnounceFailedLoot					= true;
+bool bAnnounceFixCorpseAttempt				= true;
+//bool bAnnounceNavTimeout					= true;
+//bool bAnnounceNavigation					= true;
+//bool bAnnounceNoCorpseFound				= true;
+//bool bAnnounceNoPathFound					= true;
+bool bAnnounceOnDropConflict				= true;
+bool bAnnounceOnFullInv						= true;
+bool bAnnounceOnLoreConflict				= true;
+bool bAnnounceOnNoLootSongSpellConflict		= true;
+//bool bAnnouncePause						= true;
+bool bAnnounceSkippedCorpse					= false;
+bool bAnnounceSkippedItems					= false;
+//bool bAnnounceStick						= true;
+//bool bAnnounceTargetLoss					= true;
+bool bAttemptToFixCorpses					= true;
+bool bAutoLootOnKills						= true;
+bool bAutoSaveNewItems						= true;
+bool bCharacterSpecificSettings				= false;
+bool bLootNoDrop							= true;
+bool bLootSaveOnlyItems						= false;
+bool bLootSpellsSongs						= true;
+//bool bPauseOnAggro						= true;
+bool bPlayBeepsOnFullInv					= true;
+bool bUseServerNames						= true;
+//int bCorpseCheckRadius					= 100;
+//int bCorpseCheckRadiusIncrements			= 100;
+int bFailedLootCount						= 6;
+//int bMaxCorpseCheckRadius					= 400;
+//int bNavTimeoutSeconds					= 20;
+int bNumberOfBeepsOnFullInv					= 3;
 
-	constexpr int START = DefaultSettings::CharacterSpecificSettings;
-	constexpr int END = DefaultSettings::AnnouncePause;		// Increment as needed
-};
+std::string GetPrefix(bool UseServerNames) {
+	std::string Prefix = "unknown";
+	if (pLocalPC) {
+		Prefix = fmt::format("{}_", pLocalPC->Name);
 
-namespace Settings {
-	bool bAutoLootOnKills = DefaultSettings::AutoLootOnKills;
-	bool bCharacterSpecificSettings = DefaultSettings::CharacterSpecificSettings;
-	bool bAutoSaveNewItems = DefaultSettings::AutoSaveNewItems;
-	bool bLootSaveOnlyItems = DefaultSettings::LootSaveOnlyItems;
-	int iCorpseCheckRadius = DefaultSettings::CorpseCheckRadius;
-	int iCorpseCheckRadiusIncrements = DefaultSettings::CorpseCheckRadiusIncrements;
-	int iMaxCorpseCheckRadius = DefaultSettings::MaxCorpseCheckRadius;
-	int iFailedLootCount = DefaultSettings::FailedLootCount;
-	bool bAttemptToFixCorpses = DefaultSettings::AttemptToFixCorpses;
-	bool bLootSpellsSongs = DefaultSettings::LootSpellsSongs;
-	int iNavTimeoutSeconds = DefaultSettings::NavTimeoutSeconds;
-	bool bLootNoDrop = DefaultSettings::LootNoDrop;
-	bool bPlayBeepsOnFullInv = DefaultSettings::PlayBeepsOnFullInv;
-	bool bPauseOnAggro = DefaultSettings::PauseOnAggro;
-	int iNumberOfBeepsOnFullInv = DefaultSettings::NumberOfBeepsOnFullInv;
-	bool bAnnounceAttemptToLoot = DefaultSettings::AnnounceAttemptToLoot;
-	bool bAnnounceCorpseFound = DefaultSettings::AnnounceCorpseFound;
-	bool bAnnounceOnFullInv = DefaultSettings::AnnounceOnFullInv;
-	bool bAnnounceAllOnInvFull = DefaultSettings::AnnounceAllOnInvFull;
-	bool bAnnounceOnNoLootSongSpellConflict = DefaultSettings::AnnounceOnNoLootSongSpellConflict;
-	bool bAnnounceOnDropConflict = DefaultSettings::AnnounceOnDropConflict;
-	bool bAnnounceOnLoreConflict = DefaultSettings::AnnounceOnLoreConflict;
-	bool bAnnounceSkippedItems = DefaultSettings::AnnounceSkippedItems;
-	bool bAnnounceSkippedCorpse = DefaultSettings::AnnounceNoPathFound;
-	bool bAnnounceNoPathFound = DefaultSettings::AnnounceNoPathFound;
-	bool bAnnounceNoCorpseFound = DefaultSettings::AnnounceNoCorpseFound;
-	bool bAnnounceNavigation = DefaultSettings::AnnounceNavigation;
-	bool bAnnounceStick = DefaultSettings::AnnounceStick;
-	bool bAnnounceNavTimeout = DefaultSettings::AnnounceNavTimeout;
-	bool bAnnounceEmptyCorpse = DefaultSettings::AnnounceEmptyCorpse;
-	bool bAnnounceFixCorpseAttempt = DefaultSettings::AnnounceFixCorpseAttempt;
-	bool bAnnounceFailedLoot = DefaultSettings::AnnounceFailedLoot;
-	bool bAnnounceTargetLoss = DefaultSettings::AnnounceTargetLoss;
-	bool bAnnouncePause = DefaultSettings::AnnouncePause;
-};
-
-PLUGIN_API void InitializePlugin()
-{
-	DebugSpewAlways("MQ2VegasLoot::Initializing version %f", MQ2Version);
-
-	AddCommand("/autoloot", AutoLootCommand);
+		if (UseServerNames) {
+			Prefix = fmt::format("{}_{}", GetServerShortName(), Prefix);
+		}
+	}
+	return Prefix;
 }
 
-/**
- * @fn ShutdownPlugin
- *
- * This is called once when the plugin has been asked to shutdown.  The plugin has
- * not actually shut down until this completes.
- */
-PLUGIN_API void ShutdownPlugin()
-{
-	DebugSpewAlways("MQ2VegasLoot::Shutting down");
+void LoadIni() {
+	PCHARINFO pChar = GetCharInfo();
 
-	RemoveCommand("/autoloot", AutoLootCommand);
+	if (!pChar) {
+		return;
+	}
+
+	bUseServerNames							= GetPrivateProfileBool("General", "UseServerNames", bUseServerNames, INIFileName);
+
+	std::string Prefix						= GetPrefix(bUseServerNames);
+	std::string strSettings					= Prefix + "Settings";
+
+	bAnnounceAllOnInvFull					= GetPrivateProfileBool(strSettings, "AnnounceAllOnInvFull", true, INIFileName);
+	bAnnounceAttemptToLoot					= GetPrivateProfileBool(strSettings, "AnnounceAttemptToLoot", true, INIFileName);
+	//bAnnounceCorpseFound					= GetPrivateProfileBool(strSettings, "AnnounceCorpseFound", true, INIFileName);
+	bAnnounceEmptyCorpse					= GetPrivateProfileBool(strSettings, "AnnounceEmptyCorpse", true, INIFileName);
+	bAnnounceFailedLoot						= GetPrivateProfileBool(strSettings, "AnnounceFixCorpseAttempt", true, INIFileName);
+	bAnnounceFixCorpseAttempt				= GetPrivateProfileBool(strSettings, "Enabled", true, INIFileName);
+	//bAnnounceNavTimeout					= GetPrivateProfileBool(strSettings, "AnnounceNavTimeout", true, INIFileName);
+	//bAnnounceNavigation					= GetPrivateProfileBool(strSettings, "AnnounceNavigation", true, INIFileName);
+	//bAnnounceNoCorpseFound				= GetPrivateProfileBool(strSettings, "AnnounceNoCorpseFound", true, INIFileName);
+	//bAnnounceNoPathFound					= GetPrivateProfileBool(strSettings, "AnnounceNoPathFound", true, INIFileName);
+	bAnnounceOnDropConflict					= GetPrivateProfileBool(strSettings, "AnnounceOnDropConflict", true, INIFileName);
+	bAnnounceOnFullInv						= GetPrivateProfileBool(strSettings, "AnnounceOnFullInv", true, INIFileName);
+	bAnnounceOnLoreConflict					= GetPrivateProfileBool(strSettings, "AnnounceOnLoreConflict", true, INIFileName);
+	bAnnounceOnNoLootSongSpellConflict		= GetPrivateProfileBool(strSettings, "AnnounceOnNoLootSongSpellConflict", true, INIFileName);
+	//bAnnouncePause						= GetPrivateProfileBool(strSettings, "AnnouncePause", true, INIFileName);
+	bAnnounceSkippedCorpse					= GetPrivateProfileBool(strSettings, "AnnounceSkippedCorpse", true, INIFileName);
+	bAnnounceSkippedItems					= GetPrivateProfileBool(strSettings, "AnnounceSkippedItems", true, INIFileName);
+	//bAnnounceStick						= GetPrivateProfileBool(strSettings, "AnnounceStick", true, INIFileName);
+	//bAnnounceTargetLoss					= GetPrivateProfileBool(strSettings, "AnnounceTargetLoss", true, INIFileName);
+	bAttemptToFixCorpses					= GetPrivateProfileBool(strSettings, "AttemptToFixCorpses", true, INIFileName);
+	bAutoLootOnKills						= GetPrivateProfileBool(strSettings, "AutoLootOnKills", true, INIFileName);
+	bAutoSaveNewItems						= GetPrivateProfileBool(strSettings, "AutoSaveNewItems", true, INIFileName);
+	bCharacterSpecificSettings				= GetPrivateProfileBool(strSettings, "CharacterSpecificSettings", true, INIFileName);
+	bLootNoDrop								= GetPrivateProfileBool(strSettings, "LootNoDrop", true, INIFileName);
+	bLootSaveOnlyItems						= GetPrivateProfileBool(strSettings, "LootSaveOnlyItems", true, INIFileName);
+	bLootSpellsSongs						= GetPrivateProfileBool(strSettings, "LootSpellsSongs", true, INIFileName);
+	//bPauseOnAggro							= GetPrivateProfileBool(strSettings, "PauseOnAggro", true, INIFileName);
+	bPlayBeepsOnFullInv						= GetPrivateProfileBool(strSettings, "PlayBeepsOnFullInv", true, INIFileName);
+
+	//int bCorpseCheckRadius				= GetPrivateProfileInt(strSettings, "CorpseCheckRadius", true, INIFileName);
+	//int bCorpseCheckRadiusIncrements		= GetPrivateProfileInt(strSettings, "CorpseCheckRadiusIncrements", true, INIFileName);
+	int bFailedLootCount					= GetPrivateProfileInt(strSettings, "FailedLootCount", true, INIFileName);
+	//int bMaxCorpseCheckRadius				= GetPrivateProfileInt(strSettings, "MaxCorpseCheckRadius", true, INIFileName);
+	//int bNavTimeoutSeconds				= GetPrivateProfileInt(strSettings, "NavTimeoutSeconds", true, INIFileName);
+	int bNumberOfBeepsOnFullInv				= GetPrivateProfileInt(strSettings, "NumberOfBeepsOnFullInv", true, INIFileName);
+
 }
 
+void AutoLootCommand(PSPAWNINFO pCHAR, PCHAR zLine) {
+	char szTemp[MAX_STRING] = { 0 };
+	GetArg(szTemp, zLine, 1);
 
+	if (!_strnicmp(szTemp, "load", 4)) {
+		LoadIni();
 
-PLUGIN_API void SetGameState(int GameState) {
-	if (GameState == GAMESTATE_INGAME) {
-		if (!bInitDone)
-			LoadIni();
+		return;
 	}
-	else if (GameState != GAMESTATE_LOGGINGIN) {
-		if (bInitDone)
-			bInitDone = false;
-	}
-}
-
-
-/**
- * @fn OnPulse
- *
- * This is called each time MQ2 goes through its heartbeat (pulse) function.
- *
- * Because this happens very frequently, it is recommended to have a timer or
- * counter at the start of this call to limit the amount of times the code in
- * this section is executed.
- */
-PLUGIN_API void OnPulse()
-{
-/*
-	static std::chrono::steady_clock::time_point PulseTimer = std::chrono::steady_clock::now();
-	// Run only after timer is up
-	if (std::chrono::steady_clock::now() > PulseTimer)
-	{
-		// Wait 5 seconds before running again
-		PulseTimer = std::chrono::steady_clock::now() + std::chrono::seconds(5);
-		DebugSpewAlways("MQ2VegasLoot::OnPulse()");
-	}
-*/
 }
 
 /**
@@ -213,48 +188,36 @@ PLUGIN_API void OnMacroStop(const char* Name)
 	// DebugSpewAlways("MQ2VegasLoot::OnMacroStop(%s)", Name);
 }
 
-void LoadIni() {
-	PCHARINFO pChar = GetCharInfo();
+PLUGIN_API void InitializePlugin() {
+	DebugSpewAlways("MQ2VegasLoot::Initializing version %f", MQ2Version);
 
-	if (!pChar) {
-		return;
-	}
-
-	Settings::bCharacterSpecificSettings				= GetPrivateProfileBool("Settings", DefaultSettings::CharacterSpecificSettings, DefaultSettings::CharacterSpecificSettings, INIFileName);
-	Settings::bAutoSaveNewItems 						= GetPrivateProfileBool("Settings", DefaultSettings::AutoSaveNewItems, DefaultSettings::AutoSaveNewItems, INIFileName);
-	Settings::bLootSaveOnlyItems						= GetPrivateProfileBool("Settings", DefaultSettings::LootSaveOnlyItems, DefaultSettings::LootSaveOnlyItems, INIFileName);
-	Settings::iCorpseCheckRadius						= GetPrivateProfileBool("Settings", DefaultSettings::CorpseCheckRadius, DefaultSettings::CharacterSpecificSettings, INIFileName);
-	Settings::iCorpseCheckRadiusIncrements				= GetPrivateProfileBool("Settings", DefaultSettings::CorpseCheckRadiusIncrements, DefaultSettings::CharacterSpecificSettings, INIFileName);
-	Settings::iMaxCorpseCheckRadius						= GetPrivateProfileBool("Settings", DefaultSettings::MaxCorpseCheckRadius, DefaultSettings::CharacterSpecificSettings, INIFileName);
-	Settings::iFailedLootCount							= GetPrivateProfileBool("Settings", DefaultSettings::FailedLootCount, DefaultSettings::CharacterSpecificSettings, INIFileName);
-	Settings::bAttemptToFixCorpses						= GetPrivateProfileBool("Settings", DefaultSettings::AttemptToFixCorpses, DefaultSettings::CharacterSpecificSettings, INIFileName);
-	Settings::bLootSpellsSongs							= GetPrivateProfileBool("Settings", DefaultSettings::CharacterSpecificSettings, DefaultSettings::CharacterSpecificSettings, INIFileName);
-	Settings::iNavTimeoutSeconds						= GetPrivateProfileBool("Settings", DefaultSettings::CharacterSpecificSettings, DefaultSettings::CharacterSpecificSettings, INIFileName);
-	Settings::bLootNoDrop								= GetPrivateProfileBool("Settings", DefaultSettings::CharacterSpecificSettings, DefaultSettings::CharacterSpecificSettings, INIFileName);
-	Settings::bPlayBeepsOnFullInv						= GetPrivateProfileBool("Settings", DefaultSettings::CharacterSpecificSettings, DefaultSettings::CharacterSpecificSettings, INIFileName);
-	Settings::iNumberOfBeepsOnFullInv					= GetPrivateProfileBool("Settings", DefaultSettings::CharacterSpecificSettings, DefaultSettings::CharacterSpecificSettings, INIFileName);
-	Settings::bAnnounceAttemptToLoot					= GetPrivateProfileBool("Settings", DefaultSettings::CharacterSpecificSettings, DefaultSettings::CharacterSpecificSettings, INIFileName);
-	Settings::bAnnounceCorpseFound 						= GetPrivateProfileBool("Settings", DefaultSettings::CharacterSpecificSettings, DefaultSettings::CharacterSpecificSettings, INIFileName);
-	Settings::bAnnounceOnFullInv 						= GetPrivateProfileBool("Settings", DefaultSettings::CharacterSpecificSettings, DefaultSettings::CharacterSpecificSettings, INIFileName);
-	Settings::bAnnounceAllOnInvFull 					= GetPrivateProfileBool("Settings", DefaultSettings::CharacterSpecificSettings, DefaultSettings::CharacterSpecificSettings, INIFileName);
-	Settings::bAnnounceOnNoLootSongSpellConflict 		= GetPrivateProfileBool("Settings", DefaultSettings::CharacterSpecificSettings, DefaultSettings::CharacterSpecificSettings, INIFileName);
-	Settings::bAnnounceOnDropConflict 					= GetPrivateProfileBool("Settings", DefaultSettings::CharacterSpecificSettings, DefaultSettings::CharacterSpecificSettings, INIFileName);
-	Settings::bAnnounceOnLoreConflict 					= GetPrivateProfileBool("Settings", DefaultSettings::CharacterSpecificSettings, DefaultSettings::CharacterSpecificSettings, INIFileName);
-	Settings::bAnnounceSkippedItems 					= GetPrivateProfileBool("Settings", DefaultSettings::CharacterSpecificSettings, DefaultSettings::CharacterSpecificSettings, INIFileName);
-	Settings::bAnnounceSkippedCorpse 					= GetPrivateProfileBool("Settings", DefaultSettings::CharacterSpecificSettings, DefaultSettings::CharacterSpecificSettings, INIFileName);
-	Settings::bAnnounceNoPathFound 						= GetPrivateProfileBool("Settings", DefaultSettings::CharacterSpecificSettings, DefaultSettings::CharacterSpecificSettings, INIFileName);
-	Settings::bAnnounceNoCorpseFound 					= GetPrivateProfileBool("Settings", DefaultSettings::CharacterSpecificSettings, DefaultSettings::CharacterSpecificSettings, INIFileName);
-	Settings::bAnnounceNavigation 						= GetPrivateProfileBool("Settings", DefaultSettings::CharacterSpecificSettings, DefaultSettings::CharacterSpecificSettings, INIFileName);
-	Settings::bAnnounceStick 							= GetPrivateProfileBool("Settings", DefaultSettings::CharacterSpecificSettings, DefaultSettings::CharacterSpecificSettings, INIFileName);
-	Settings::bAnnounceNavTimeout 						= GetPrivateProfileBool("Settings", DefaultSettings::CharacterSpecificSettings, DefaultSettings::CharacterSpecificSettings, INIFileName);
-	Settings::bAnnounceEmptyCorpse 						= GetPrivateProfileBool("Settings", DefaultSettings::CharacterSpecificSettings, DefaultSettings::CharacterSpecificSettings, INIFileName);
-	Settings::bAnnounceFixCorpseAttempt 				= GetPrivateProfileBool("Settings", DefaultSettings::CharacterSpecificSettings, DefaultSettings::CharacterSpecificSettings, INIFileName);
-	Settings::bAnnounceFailedLoot 						= GetPrivateProfileBool("Settings", DefaultSettings::CharacterSpecificSettings, DefaultSettings::CharacterSpecificSettings, INIFileName);
-	Settings::bAnnounceTargetLoss 						= GetPrivateProfileBool("Settings", DefaultSettings::CharacterSpecificSettings, DefaultSettings::CharacterSpecificSettings, INIFileName);
-	Settings::bAnnouncePause 							= GetPrivateProfileBool("Settings", DefaultSettings::AnnouncePause, DefaultSettings::AnnouncePause, INIFileName);
-
+	AddCommand("/autoloot", AutoLootCommand);
 }
 
-void AutoLootCommand(PSPAWNINFO pCHAR, PCHAR zLine) {
+PLUGIN_API void ShutdownPlugin() {
+	DebugSpewAlways("MQ2VegasLoot::Shutting down");
 
+	RemoveCommand("/autoloot");
+}
+
+
+PLUGIN_API void SetGameState(int GameState) {
+	if (GameState == GAMESTATE_INGAME) {
+		if (!bInitDone)
+			LoadIni();
+	}
+	else if (GameState != GAMESTATE_LOGGINGIN) {
+		if (bInitDone)
+			bInitDone = false;
+	}
+}
+
+PLUGIN_API void OnPulse() {
+	static int Pulse = 0;
+
+	if (GetGameState() != GAMESTATE_INGAME)
+		return;
+
+	if (!bInitDone)
+		return;
 }
